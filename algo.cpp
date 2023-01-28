@@ -1,18 +1,105 @@
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <vector>
+#include <utility>
+#include <string>
 
 using namespace std;
 using int_list = list<int>;
 
 struct graph {
-    int verticies_count;
-    vector<int_list> adj_vec;
+    int verticies_count {};
+    vector<int_list> adj_vec {};
 };
 
 using graph_t = struct graph;
 
-float two_approx(graph_t G){
+pair<float,int_list> two_approx(graph_t G);
+
+list<graph_t> parse_files(list<string> filepaths);
+
+
+// Main loop, where we do benchmarks
+int main(){
+    // graph_t G = {
+    //     5,
+    //     {{1,2},{0},{0},{4},{3}}
+    // };
+    // pair<float,int_list> res = two_approx(G);
+    // cout << "density" << res.first << endl;
+    // cout << "nodes to keep" << endl;
+    // for (auto i : res.second){
+    //     cout << i << endl;
+    // }
+    list<graph_t> graphs = parse_files({"./data/facebook_clean_data/artist_edges.csv"});
+    graph_t G = graphs.front();
+    cout << G.verticies_count;
+	return 0;
+
+}
+
+//Helper function to parse the csv files into graph_t structs
+list<graph_t> parse_files(list<string> filepaths){
+    list<graph_t> res {};
+    for (auto path : filepaths){
+        ifstream ifs {};
+        string line;
+        // We are parsing CSV
+        string delimiter = ",";
+        // Keep track of the max vertex number encoutered
+        int max_vertex_index = 0; 
+        ifs.open(path);
+        if (ifs.is_open()){
+            // First line is always node1, node2 so we ditch this
+            getline(ifs,line);
+            // First loop to get the number of verticies
+            while (getline(ifs,line)){
+                size_t pos = line.find(delimiter);
+                // Split between the comma
+                int left = stoi(line.substr(0,pos));
+                int right = stoi(line.substr(pos+1,line.length()));
+                if (left > max_vertex_index){
+                    max_vertex_index = left;
+                }
+                if (right > max_vertex_index){
+                    max_vertex_index = right;
+                }
+            }
+            // Initialize a vector the right size
+            vector<int_list> adj_vec (max_vertex_index+1);
+            graph_t graph {
+                max_vertex_index+1,
+                adj_vec
+            };
+            // Reset get position of ifs
+            ifs.seekg(0);
+            // First line is always node1, node2 so we ditch this
+            getline(ifs,line);
+            // Second loop to store edges
+            while (getline(ifs,line)){
+                size_t pos = line.find(delimiter);
+                // Split between the comma
+                int left = stoi(line.substr(0,pos));
+                int right = stoi(line.substr(pos+1,line.length()));
+                adj_vec[left].push_back(right);
+                adj_vec[right].push_back(left);
+            }
+            // Close file
+            ifs.close();
+            // Add graph to the list
+            cout << graph.verticies_count << endl;
+            res.push_back(graph);
+        }
+        else {
+            cout << "Issue opening " << path << endl;
+        }
+    }
+    return res;
+}
+
+// Algorithm to compute two approx
+pair<float,int_list> two_approx(graph_t G){
     // Copy G into H
     graph_t H = G;
     // Collect input variables, vectors are copied in O(nb_verticies)
@@ -96,9 +183,9 @@ float two_approx(graph_t G){
         }
 
 
-        // Find new min degree if we are not at the last step
+        // Find new min degree
         // The new min degree must be at least min_degree-1, so we check for this case
-        if (!degrees[min_degree-1].empty() && min_degree!=0){
+        if (min_degree!=0 && !degrees[min_degree-1].empty()){
             min_degree = min_degree-1;
         }
         // If it's not min_degree-1, it's >= min_degree
@@ -109,6 +196,8 @@ float two_approx(graph_t G){
             }
         }
     }
+    // Get the last node, staying after main loop :
+    int last_node = degrees[min_degree].front();
     // Loop through all the densities to find the best one
     int best_step=0;
     for (int step = 1; step<verticies_count; step++){
@@ -116,15 +205,15 @@ float two_approx(graph_t G){
             best_step = step;
         }
     }
+    // Generate the list of nodes to keep 
+    int_list nodes_to_keep = int_list();
+    // Add the last node which is never removed
+    nodes_to_keep.push_front(last_node);
+    // We wish to keep all the nodes deleted after the best step
+    for (int i = best_step+1; i < verticies_count; i++){
+        nodes_to_keep.push_front(deleted_nodes[i]);
+    }
 
-	return densities[best_step];
+	return pair<float,int_list>(densities[best_step],nodes_to_keep);
 
 }
-
-int main(){
-	graph_t G = {
-		5,
-		{{1,2},{0},{0},{4},{3}}
-	};
-	cout << two_approx(G) << endl;
-} 
