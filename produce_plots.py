@@ -3,8 +3,6 @@ import numpy as np
 import csv
 
 # For plotting functions as comparisons
-def identity(n, normalization_coeff,space_size):
-    return normalization_coeff*(n/space_size)
 
 def square(n,normalization_coeff,space_size):
     return normalization_coeff*(n/space_size)**2 
@@ -26,10 +24,13 @@ with open("./benchmarks/benchmarks_edges.csv") as csvfile :
 
 x_space = np.linspace(0,max(sizeval))
 
-id_vals = identity(x_space,max(timeval),max(sizeval))
+# Linear regression
+A = np.vstack([sizeval, np.ones(len(sizeval))]).T
+
+m, c = np.linalg.lstsq(A, timeval, rcond=None)[0]
 
 plt.scatter(sizeval,timeval,label='Benchmark points')
-plt.plot(x_space,id_vals,label='Comparison with f(x)=x, normalized')
+plt.plot(x_space,m*x_space+c,label='Comparison with f(x)=x, normalized')
 plt.xlabel("Number of edges")
 plt.ylabel("Time, in seconds")
 plt.title("Time of execution as a function of the number of edges")
@@ -50,10 +51,15 @@ with open("./benchmarks/benchmarks_edges+verticies.csv") as csvfile :
 
 x_space = np.linspace(0,max(sizeval))
 
-id_vals = identity(x_space,max(timeval),max(sizeval))
+
+# Linear regression
+A = np.vstack([sizeval, np.ones(len(sizeval))]).T
+
+m, c = np.linalg.lstsq(A, timeval, rcond=None)[0]
+
 
 plt.scatter(sizeval,timeval,label='Benchmark points')
-plt.plot(x_space,id_vals,label='Comparison with f(x)=x, normalized')
+plt.plot(x_space,m*x_space+c,label='Comparison with f(x)=x, normalized')
 plt.xlabel("Number of edges + number of verticies")
 plt.ylabel("Time, in seconds")
 plt.title("Time of execution as a function of the number of verticies\n plus the number of edges")

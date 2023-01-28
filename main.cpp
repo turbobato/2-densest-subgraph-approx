@@ -42,17 +42,6 @@ list<graph_t> parse_files(list<string> filepaths);
 // main function, parse files and benchmark algo on the dataset from this link
 // http://snap.stanford.edu/data/gemsec-Facebook.html
 int main(){
-    // graph_t G = {
-    //     5,
-    //     {{1,2},{0},{0},{4},{3}}
-    // };
-    // pair<float,int_list> res = two_approx(G);
-    // cout << "density" << res.first << endl;
-    // cout << "nodes to keep" << endl;
-    // for (auto i : res.second){
-    //     cout << i << endl;
-    // }
-
     // Parse dataset
     list<graph_t> graphs = parse_files({
         "./data/facebook_clean_data/athletes_edges.csv",
@@ -72,6 +61,9 @@ int main(){
     list<pair<int,double>> size_time_list2 {};
     // List 3 for size = nb verticies
     list<pair<int,double>> size_time_list3 {};
+    // CSV to store densities obtained
+    ofstream densityFile ("./results.csv");
+    densityFile << "edges," << "verticies," << "density," << "clique density," << "optimal density approximation," << "number of nodes in the subgraph," << "time" << endl;
     // Benchmark loop
     for (auto graph : graphs){
         clock_t start, end;
@@ -81,13 +73,26 @@ int main(){
         int size3 = graph.verticies_count;
         double time_used;
         start = clock();
-        two_approx(graph);
+        pair<float,int_list> res = two_approx(graph);
         end = clock();
+        float approx_density = res.first;
+        int subgraph_nodes = res.second.size();
+        float initial_density = ((float) graph.edges_number)/ graph.verticies_count;
+        float clique_density = ((float) 2*graph.edges_number)/(graph.verticies_count*(graph.verticies_count-1));
         time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        densityFile << 
+            graph.edges_number << "," <<
+            graph.verticies_count << "," <<
+            initial_density << "," <<
+            clique_density << "," <<
+            approx_density << "," <<
+            subgraph_nodes << "," <<
+            time_used << endl;
         size_time_list1.push_back(pair<int,double>(size1,time_used));
         size_time_list2.push_back(pair<int,double>(size2,time_used));
         size_time_list3.push_back(pair<int,double>(size3,time_used));
     }
+    densityFile.close();
     // Write benchmarks in a 3 csv files
     ofstream bench_file1 ("./benchmarks/benchmarks_edges+verticies.csv");
     bench_file1 << "size,time" << endl;
@@ -144,14 +149,15 @@ list<graph_t> parse_files(list<string> filepaths){
                 nb_edges++;
             }
             // Initialize a vector the right size
-            vector<int_list> adj_vec (max_vertex_index+1);
+            vector<int_list> vec (max_vertex_index+1);
             graph_t graph {
                 max_vertex_index+1,
                 nb_edges,
-                adj_vec
+                vec
             };
             // Reset get position of ifs
-            ifs.seekg(0);
+            ifs.clear();
+            ifs.seekg(0, std::ios::beg);
             // First line is always node1, node2 so we ditch this
             getline(ifs,line);
             // Second loop to store edges
@@ -160,8 +166,8 @@ list<graph_t> parse_files(list<string> filepaths){
                 // Split between the comma
                 int left = stoi(line.substr(0,pos));
                 int right = stoi(line.substr(pos+1,line.length()));
-                adj_vec[left].push_back(right);
-                adj_vec[right].push_back(left);
+                graph.adj_vec[left].push_back(right);
+                graph.adj_vec[right].push_back(left);
             }
             // Close file
             ifs.close();
@@ -177,8 +183,6 @@ list<graph_t> parse_files(list<string> filepaths){
 
 // Algorithm to compute two approx
 pair<float,int_list> two_approx(graph_t G){
-    // Copy G into H
-    graph_t H = G;
     // Collect input variables, vectors are copied in O(nb_verticies)
     int verticies_count = G.verticies_count;
     vector<int_list> adj_vec = G.adj_vec;
@@ -221,24 +225,28 @@ pair<float,int_list> two_approx(graph_t G){
     int deleted_nodes[verticies_count];
     // Array where densisties[i] is the density after i steps
     float densities[verticies_count];
+    // After 0 steps, we have the starting density
     densities[0] = initial_density;
     //    
-    // Main Loop 
+    // Main Loop, nb_verticies iterations
     //
     for (int step = 1; step < verticies_count; step++){
         int_list deg_list = degrees[min_degree];
         int node_to_remove = deg_list.front();
-        // Update deleted nodes, number of edges and densities
+        // Update deleted nodes, number of edges and densities, all O(1)
         deleted_nodes[step]=node_to_remove;
         number_of_edges-=min_degree;
         densities[step] = ((float) number_of_edges/ (float) (verticies_count-step));
         current_degrees[node_to_remove]=0;
-        // Now we update degree_list
+        // Now we update degree_list, we remove the node currently examinated
+        // We will never examine it again as it is now in none of the lists
+        // Composing the vector degrees
         degrees[min_degree].pop_front();
         
         // Now we update degrees of neighbours of the node removed
         int_list adj_list = adj_vec[node_to_remove];
         // Loop through the neighbours of the node to remove
+        // This takes O(degree(node_removed))
         for (const auto & node : adj_list){
             // We get the degree before deletion
             int node_degree = current_degrees[node];
@@ -259,8 +267,8 @@ pair<float,int_list> two_approx(graph_t G){
 			}         
         }
 
-
         // Find new min degree
+        // Finding the new degree takes O(degree(v)), where v is the new node with min degree
         // The new min degree must be at least min_degree-1, so we check for this case
         if (min_degree!=0 && !degrees[min_degree-1].empty()){
             min_degree = min_degree-1;
@@ -273,6 +281,18 @@ pair<float,int_list> two_approx(graph_t G){
             }
         }
     }
+    // End of main loop : performance analysis
+    // We loop through all nodes of the graph, and we do two costly things while doing that : 
+    // - First, loop through neigbours of the node to remove and update the vector "degrees" : O(deg(node to remove))
+    // - Second, find the new min degree, by finding the first non-empty list in the vector "degrees". This non-empty list
+    // is at the index new_min_degree, so we find it in O(new_min_degree) = O(deg(v)) for some v that we will remove
+    // at the next iteration since it has new min degree
+    // Finally, main loop takes O(sum_{v vertex} deg(v)) + O(sum_{v vertex} deg(v)) = O(2*nb_edges) = O(nb_edges) 
+
+
+    // Finding best density, and putting nodes to keep in a list
+    // This all takes O(nb of verticies)
+
     // Get the last node, staying after main loop :
     int last_node = degrees[min_degree].front();
     // Loop through all the densities to find the best one
@@ -290,5 +310,10 @@ pair<float,int_list> two_approx(graph_t G){
     for (int i = best_step+1; i < verticies_count; i++){
         nodes_to_keep.push_front(deleted_nodes[i]);
     }
+
+    // Final performance analysis : 
+    // O(nb_edges) for the main loop, O(nb_vertices) for the precomputation/work at the end, so :
+    // O(nb_edges + nb_verticies) total, i.e linear in the size of the graph
+
 	return pair<float,int_list>(densities[best_step],nodes_to_keep);
 }
