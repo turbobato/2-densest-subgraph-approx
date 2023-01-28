@@ -67,7 +67,7 @@ int main(){
     for (auto graph : graphs){
         clock_t start, end;
         // Size is O(nb verticies + nb edges)
-        int size = graph.verticies_count + graph.edges_number;
+        int size = graph.edges_number+ graph.verticies_count;
         double time_used;
         start = clock();
         two_approx(graph);
@@ -76,7 +76,7 @@ int main(){
         size_time_list.push_back(pair<int,double>(size,time_used));
     }
     // Write benchmarks in a csv file
-    ofstream bench_file ("./benchmarks.csv");
+    ofstream bench_file ("./benchmarks/benchmarks.csv");
     bench_file << "size,time" << endl;
     for (auto p : size_time_list){
         bench_file << p.first << "," << p.second << endl;
