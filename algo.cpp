@@ -81,6 +81,7 @@ int main(){
     for (auto p : size_time_list){
         bench_file << p.first << "," << p.second << endl;
     }
+    bench_file.close();
     return 0;
 }
 
