@@ -4,23 +4,43 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <time.h>
+
+//
+// Type declarations
+//
 
 using namespace std;
+
 using int_list = list<int>;
 
 struct graph {
     int verticies_count {};
+    int edges_number {};
     vector<int_list> adj_vec {};
 };
 
 using graph_t = struct graph;
 
+//
+// End of declarations
+//
+
+
+//
+// Prototypes declarations
+//
+
 pair<float,int_list> two_approx(graph_t G);
 
 list<graph_t> parse_files(list<string> filepaths);
 
+//
+// End of declarations
+//
 
-// Main loop, where we do benchmarks
+// main function, parse files and benchmark algo on the dataset from this link
+// http://snap.stanford.edu/data/gemsec-Facebook.html
 int main(){
     // graph_t G = {
     //     5,
@@ -32,11 +52,36 @@ int main(){
     // for (auto i : res.second){
     //     cout << i << endl;
     // }
-    list<graph_t> graphs = parse_files({"./data/facebook_clean_data/artist_edges.csv"});
-    graph_t G = graphs.front();
-    cout << G.verticies_count;
-	return 0;
 
+    // Parse dataset
+    list<graph_t> graphs = parse_files({
+        "./data/facebook_clean_data/athletes_edges.csv",
+        "./data/facebook_clean_data/artist_edges.csv",
+        "./data/facebook_clean_data/company_edges.csv",
+        "./data/facebook_clean_data/government_edges.csv",
+        "./data/facebook_clean_data/new_sites_edges.csv",
+        "./data/facebook_clean_data/public_figure_edges.csv",
+        "./data/facebook_clean_data/tvshow_edges.csv"});
+    list<pair<int,double>> size_time_list {};
+    // Benchmark loop
+    for (auto graph : graphs){
+        clock_t start, end;
+        // Size is O(nb verticies + nb edges)
+        int size = graph.verticies_count + graph.edges_number;
+        double time_used;
+        start = clock();
+        two_approx(graph);
+        end = clock();
+        time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        size_time_list.push_back(pair<int,double>(size,time_used));
+    }
+    // Write benchmarks in a csv file
+    ofstream bench_file ("./benchmarks.csv");
+    bench_file << "size,time" << endl;
+    for (auto p : size_time_list){
+        bench_file << p.first << "," << p.second << endl;
+    }
+    return 0;
 }
 
 //Helper function to parse the csv files into graph_t structs
@@ -49,11 +94,12 @@ list<graph_t> parse_files(list<string> filepaths){
         string delimiter = ",";
         // Keep track of the max vertex number encoutered
         int max_vertex_index = 0; 
+        int nb_edges = 0;
         ifs.open(path);
         if (ifs.is_open()){
             // First line is always node1, node2 so we ditch this
             getline(ifs,line);
-            // First loop to get the number of verticies
+            // First loop to get the number of verticies and edges
             while (getline(ifs,line)){
                 size_t pos = line.find(delimiter);
                 // Split between the comma
@@ -65,11 +111,14 @@ list<graph_t> parse_files(list<string> filepaths){
                 if (right > max_vertex_index){
                     max_vertex_index = right;
                 }
+                // Augment the number of edges
+                nb_edges++;
             }
             // Initialize a vector the right size
             vector<int_list> adj_vec (max_vertex_index+1);
             graph_t graph {
                 max_vertex_index+1,
+                nb_edges,
                 adj_vec
             };
             // Reset get position of ifs
@@ -88,7 +137,6 @@ list<graph_t> parse_files(list<string> filepaths){
             // Close file
             ifs.close();
             // Add graph to the list
-            cout << graph.verticies_count << endl;
             res.push_back(graph);
         }
         else {
@@ -213,7 +261,5 @@ pair<float,int_list> two_approx(graph_t G){
     for (int i = best_step+1; i < verticies_count; i++){
         nodes_to_keep.push_front(deleted_nodes[i]);
     }
-
 	return pair<float,int_list>(densities[best_step],nodes_to_keep);
-
 }
