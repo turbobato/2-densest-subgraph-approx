@@ -1,4 +1,4 @@
-graphs used : http://snap.stanford.edu/data/gemsec-Facebook.html
+graphs used : http://snap.stanford.edu/data/gemsec-Facebook.html and http://snap.stanford.edu/data/gemsec-Deezer.html
 
 plots : 
 

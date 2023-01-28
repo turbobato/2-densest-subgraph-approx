@@ -61,27 +61,55 @@ int main(){
         "./data/facebook_clean_data/government_edges.csv",
         "./data/facebook_clean_data/new_sites_edges.csv",
         "./data/facebook_clean_data/public_figure_edges.csv",
-        "./data/facebook_clean_data/tvshow_edges.csv"});
-    list<pair<int,double>> size_time_list {};
+        "./data/facebook_clean_data/tvshow_edges.csv",
+        "./data/deezer_clean_data/HR_edges.csv",
+        "./data/deezer_clean_data/HU_edges.csv",
+        "./data/deezer_clean_data/RO_edges.csv"});
+    
+    // List 1 is for size = nb edges + nb verticies
+    list<pair<int,double>> size_time_list1 {};
+    // List 2 for size = nb edges
+    list<pair<int,double>> size_time_list2 {};
+    // List 3 for size = nb verticies
+    list<pair<int,double>> size_time_list3 {};
     // Benchmark loop
     for (auto graph : graphs){
         clock_t start, end;
-        // Size is O(nb verticies + nb edges)
-        int size = graph.edges_number+ graph.verticies_count;
+        // Three sizes for list 1, 2, 3
+        int size1 = graph.edges_number+ graph.verticies_count;
+        int size2 = graph.edges_number;
+        int size3 = graph.verticies_count;
         double time_used;
         start = clock();
         two_approx(graph);
         end = clock();
         time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-        size_time_list.push_back(pair<int,double>(size,time_used));
+        size_time_list1.push_back(pair<int,double>(size1,time_used));
+        size_time_list2.push_back(pair<int,double>(size2,time_used));
+        size_time_list3.push_back(pair<int,double>(size3,time_used));
     }
-    // Write benchmarks in a csv file
-    ofstream bench_file ("./benchmarks/benchmarks.csv");
-    bench_file << "size,time" << endl;
-    for (auto p : size_time_list){
-        bench_file << p.first << "," << p.second << endl;
+    // Write benchmarks in a 3 csv files
+    ofstream bench_file1 ("./benchmarks/benchmarks_edges+verticies.csv");
+    bench_file1 << "size,time" << endl;
+    for (auto p : size_time_list1){
+        bench_file1 << p.first << "," << p.second << endl;
     }
-    bench_file.close();
+    bench_file1.close();
+
+    ofstream bench_file2 ("./benchmarks/benchmarks_edges.csv");
+    bench_file2 << "size,time" << endl;
+    for (auto p : size_time_list2){
+        bench_file2 << p.first << "," << p.second << endl;
+    }
+    bench_file2.close();
+
+    ofstream bench_file3 ("./benchmarks/benchmarks_verticies.csv");
+    bench_file3 << "size,time" << endl;
+    for (auto p : size_time_list3){
+        bench_file3 << p.first << "," << p.second << endl;
+    }
+    bench_file3.close();
+
     return 0;
 }
 

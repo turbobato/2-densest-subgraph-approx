@@ -42,7 +42,7 @@ plt.close()
 sizeval = []
 timeval = []
 
-with open("./benchmarks/benchmarks_nodes+verticies.csv") as csvfile :
+with open("./benchmarks/benchmarks_edges+verticies.csv") as csvfile :
     csvreader = csv.DictReader(csvfile)
     for row in csvreader :
         sizeval.append(int(row['size']))
@@ -56,7 +56,7 @@ plt.scatter(sizeval,timeval,label='Benchmark points')
 plt.plot(x_space,id_vals,label='Comparison with f(x)=x, normalized')
 plt.xlabel("Number of edges + number of verticies")
 plt.ylabel("Time, in seconds")
-plt.title("Time of execution as a function of the number of verticies plus the number of edges")
+plt.title("Time of execution as a function of the number of verticies\n plus the number of edges")
 plt.legend()
 plt.savefig("./benchmarks_plots/edges+verticies_graph.png")
 plt.close()
