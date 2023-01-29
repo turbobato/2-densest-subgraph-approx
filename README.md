@@ -10,7 +10,7 @@ This is the report for the linear implementation of the 2-approximation algorith
 
 1. [Technical precisions](#precisions)
 2. [Explanation of the implementation](#explanation)
-3. [Benchmarks](#benchmarks)
+3. [Benchmarks and results](#benchmarks)
 
 ## Technical precisions <a name="precisions"></a>
 
@@ -42,16 +42,36 @@ In all the following, when talking about lists, I will mean linked lists, which 
 
 A first important remark is that I made sure to use C++ references and pointers, so that no copy is made in the algorithm, and all operations can be supposed atomic i.e taking O(1). Also, I chose to represent graphs as vector of adjacency lists
 
-The main ingredients of my implementation strategy is : keeping a vector of lists of nodes where `vec[i]` is the list of vectors with degree i, so that I could dynamically keep degrees updated as nodes get removed. In detail :
+The main ingredient of my implementation strategy is : keeping a vector of lists of nodes where `vec[i]` is the list of vectors with degree i, so that I could dynamically keep degrees updated as nodes get removed. In detail :
  
 1. Precompute phase :
     - Initialize a vector `degrees` of lists of nodes, where the entry `i` is the list of nodes with degree `i`, an array `nodes_iterators` containing iterators representing the positions of nodes in the "degree lists", so we can do deletions in O(1) using these iterators and method `.erase()` of C++ lists. We aswell initalize an array `current_degrees` to store the current degree of each node. This is all done in ``O(number of nodes)``.
-    - Lop through all nodes, to compute degrees of each node (done in `O(degree(v))` using adjacency lists), to fill the previously described data structures with correct data. We aswell compute the minimum degree and the total number of edges (using formula : sum degrees = 2*nb of edges). This is all done in `O(sum (degrees))`= `O(nb edges)`
-Precompute phase is thus in `O(nb edges + nb nodes)`
+    - Loop through all nodes, to compute degrees of each node (done in `O(degree(v))` using adjacency lists), to fill the previously described data structures with correct data. We aswell compute the minimum degree and the total number of edges (using formula : `sum degrees = 2*nb of edges`). Each iteration of the loop takes `O(degree(v))` and since we loop through all nodes this all takes `O(sum (degrees))`= `O(nb edges)`
+Precompute phase is thus in `O(nb edges + nb nodes)`.
 
 2. Main loop :
+    - Initialize `densities`, an array of float to keep track of the density at each step, and `deleted_nodes`, an array of ints to keep track of node deleted at each step. Store the initial density as `densities[0]` (density after 0 step) : this takes `O(nb nodes)`
+    - Then, for `step` between `1` and `nb_nodes` :
+        - Take the front element of the "degree list" corresponding to current minimum degree, pop it, compute new number of edges, and new density. Update arrays `densities` and `deleted_nodes` : `O(1)`
+        - We need to update degrees of the node being deleted : loop through all neighbours of the node being deleted, get their degree, delete in `O(1)` them from their current "degree list" using the iterator and insert them in the list corresponding to their `degree-1`. Get a new iterator corresponding to the new position and update the iterator vector (`O(1)`). 
+        
+        So, this takes `O(nb of neighbours of node to remove)` = `O(degree of node to remove)`
+        - Find new minimum degree : 
+            - The new min degree must be at least min_degree-1, so we check for this case in `O(1)`
+            - If it's not `min_degree-1`, increase `min_degree` until we find a "degree list" not empty (checking if a list is empty is `O(1)`). This takes `O(degree(node with new min degree))` 
+So in total, for each iteration in the main loop we do `O(deg(v)) (update neighbours degree+ O(deg(v')) (find new min degree)` operations, where v and v' get removed. So in total, we do `O(sum(degree(v)))` operations, which is `O(nb edges)`. Adding the complexity of data structures initialization, we get `O(nb edges + nb nodes)`.
 
-## Benchmarks <a name="benchmarks"></a>
+3. Find best density and nodes to keep : 
+
+We do this by looping through the `densities` and `nodes_to_delete` arrays, and we return the best density, and the list of nodes to keep : this takes `O(nb nodes)` to do.
+
+### Conclusion :
+
+Combining phase 1, 2 and three we get a complexity of `O(nb edges + nb nodes)`, i.e linear in the size of the graph.
+
+Let us now compare this theoritical complexity to the benchmarks effectively obtained.
+
+## Benchmarks and results <a name="benchmarks"></a>
 
 ![Plot of time=f(number of edges + number of verticies), without twitch](/benchmarks_plots/edges+verticies_plot_first_points.png "Plot of time=f(number of edges + number of verticies), without twitch")
 

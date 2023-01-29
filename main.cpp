@@ -229,7 +229,7 @@ pair<float,int_list> two_approx(const graph_t& G){
     float densities[verticies_count];
     // After 0 steps, we have the starting density
     densities[0] = initial_density;
-    //    
+    // Those intializations took O(nb nodes) to do
     // Main Loop, nb_verticies iterations
     //
     for (int step = 1; step < verticies_count; step++){
@@ -244,7 +244,8 @@ pair<float,int_list> two_approx(const graph_t& G){
         // Composing the vector degrees
         degrees[min_degree].pop_front();
         
-        // Now we update degrees of neighbours of the node removed
+        // Now we update degrees of neighbours of the node removed,
+        // Make sure to take adj_list by reference
         const int_list& adj_list = adj_vec[node_to_remove];
         // Loop through the neighbours of the node to remove
         // This takes O(degree(node_removed))
@@ -277,6 +278,7 @@ pair<float,int_list> two_approx(const graph_t& G){
         // If it's not min_degree-1, it's >= min_degree
         else {
             int_list* l = &degrees[min_degree];
+            // Checking if list is empty is in O(1)
             while (l->empty() && ++min_degree < verticies_count){
                 l = &degrees[min_degree];
             }
