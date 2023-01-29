@@ -92,6 +92,7 @@ In the following table are the intial densities and approximative densities for 
 |6797557|168114   |40.4342|137.204                      |4088                           |2.83759|
 |92752  |28281    |3.27966|8.36782                      |87                             |0.038767|
 
+An interesting observation is that the number of nodes in the approximation of the optimal subgraph is pretty small, which could indicate that this subgraph corresponds to some sort of community. 
 
 ### Benchmarks
 
