@@ -73,8 +73,48 @@ Let us now compare this theoritical complexity to the benchmarks effectively obt
 
 ## Benchmarks and results <a name="benchmarks"></a>
 
+### Results 
+
+In the following table are the intial densities and approximative densities for each one of the graphs from the datasets described in the introduction (see also `results.csv`) :
+
+|edges  |verticies|density|clique density|optimal density approximation|number of nodes in the subgraph|time    |
+|-------|---------|-------|--------------|-----------------------------|-------------------------------|--------|
+|86858  |13866    |6.2641 |0.000903584   |17.7619                      |42                             |0.019891|
+|819306 |50515    |16.2191|-0.000939974  |58.018                       |1724                           |0.225348|
+|52310  |14113    |3.70651|0.000525299   |10.8969                      |97                             |0.019124|
+|89455  |7057     |12.6761|0.00359299    |36.4876                      |242                            |0.01646 |
+|206259 |27917    |7.38829|0.000529323   |18.2217                      |1403                           |0.067434|
+|67114  |11565    |5.8032 |0.00100367    |34.5338                      |281                            |0.014271|
+|17262  |3892     |4.43525|0.00227975    |30.5938                      |64                             |0.003516|
+|498202 |54573    |9.12909|-0.00075668   |16.3826                      |6775                           |0.153693|
+|222887 |47538    |4.68861|-0.000219037  |8.58442                      |77                             |0.084261|
+|125826 |41773    |3.01214|0.000144218   |5.01235                      |162                            |0.054247|
+|6797557|168114   |40.4342|-0.00754185   |137.204                      |4088                           |2.32675 |
+|92752  |28281    |3.27966|0.000231942   |8.36782                      |87                             |0.030373|
+
+### Benchmarks
+
+I chose to include 3 differents plots that I found interesting
+
+1. Time as function of nb edges + nb verticies, without the "big" graph from twitch dataset
+
+I chose to include this first this graph because the points from the first graphs (meaning, without the graph with 7mil edges) are quite close one from another, allowing me to perform linear regression with sizes ranging from around 20k to 800k, and it looks like the complexity is indeed linear.
+
 ![Plot of time=f(number of edges + number of verticies), without twitch](/benchmarks_plots/edges+verticies_plot_first_points.png "Plot of time=f(number of edges + number of verticies), without twitch")
+
+2. Time as function of nb edges + nb verticies, with the "big" graph from twitch dataset
+
+Now I chose to add the graph from twitch, to see if even by multiplying the size of the input by 10, the time of execution would still be on the the line defined by the first points, which is the case. This conforts the fact that the theoritical complexity analysis is correct, and that the complexity is indeed **linear**
 
 ![Plot of time=f(number of edges + number of verticies)](/benchmarks_plots/edges+verticies_plot_all.png "Plot of time=f(number of edges + number of verticies)")
 
+3. Time as function of nb edges
+
+I chose to include this plot of the time as a function of only the number of edges, because in real life cases, the number of verticies is often small compared to the number of edges, and so I wanted to see if `O(nb edges)` could be a good complexity approximation for thoses cases where the number of verticies is small. We see below that we also get quite a nice line, which confirms my hypothesis.
+
+
 ![Plot of time=f(number of edges)](/benchmarks_plots/edges_plot.png "Plot of time=f(number of edges)")
+
+## Conclusion
+
+By looking at the theoritical analysis, and the benchmarks, it looks like that the algorithm was successfully implemented in linear time in the input size, using doubly linked lists to update dynamically the degrees at each iteration.
