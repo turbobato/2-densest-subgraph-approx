@@ -65,7 +65,7 @@ int main(){
     list<pair<int,double>> size_time_list3 {};
     // CSV to store densities obtained
     ofstream densityFile ("./results.csv");
-    densityFile << "edges," << "verticies," << "density," << "clique density," << "optimal density approximation," << "number of nodes in the subgraph," << "time" << endl;
+    densityFile << "edges," << "verticies," << "density," << "optimal density approximation," << "number of nodes in the subgraph," << "time" << endl;
     // Benchmark loop
     for (auto graph : graphs){
         clock_t start, end;
@@ -80,13 +80,11 @@ int main(){
         float approx_density = res.first;
         int subgraph_nodes = res.second.size();
         float initial_density = ((float) graph.edges_number)/ graph.verticies_count;
-        float clique_density = ((float) 2*graph.edges_number)/(graph.verticies_count*(graph.verticies_count-1));
         time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
         densityFile << 
             graph.edges_number << "," <<
             graph.verticies_count << "," <<
             initial_density << "," <<
-            clique_density << "," <<
             approx_density << "," <<
             subgraph_nodes << "," <<
             time_used << endl;
