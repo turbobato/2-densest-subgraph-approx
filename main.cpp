@@ -31,7 +31,7 @@ using graph_t = struct graph;
 // Prototypes declarations
 //
 
-pair<float,int_list> two_approx(graph_t G);
+pair<float,int_list> two_approx(const graph_t& G);
 
 list<graph_t> parse_files(list<string> filepaths);
 
@@ -53,7 +53,9 @@ int main(){
         "./data/facebook_clean_data/tvshow_edges.csv",
         "./data/deezer_clean_data/HR_edges.csv",
         "./data/deezer_clean_data/HU_edges.csv",
-        "./data/deezer_clean_data/RO_edges.csv"});
+        "./data/deezer_clean_data/RO_edges.csv",
+        "./data/large_twitch_edges.csv",
+        "./data/deezer_europe_edges.csv"});
     
     // List 1 is for size = nb edges + nb verticies
     list<pair<int,double>> size_time_list1 {};
@@ -182,10 +184,10 @@ list<graph_t> parse_files(list<string> filepaths){
 }
 
 // Algorithm to compute two approx
-pair<float,int_list> two_approx(graph_t G){
-    // Collect input variables, vectors are copied in O(nb_verticies)
-    int verticies_count = G.verticies_count;
-    vector<int_list> adj_vec = G.adj_vec;
+pair<float,int_list> two_approx(const graph_t& G){
+    // Get references to input variables for practicality
+    const int& verticies_count = G.verticies_count;
+    const vector<int_list>& adj_vec = G.adj_vec;
 
     // Create a vector of lists where degrees[i] is the list of nodes with degree i
     // We aswell want to keep a vector of iterators to the nodes in the (doubly) linked lists,
@@ -231,8 +233,7 @@ pair<float,int_list> two_approx(graph_t G){
     // Main Loop, nb_verticies iterations
     //
     for (int step = 1; step < verticies_count; step++){
-        int_list deg_list = degrees[min_degree];
-        int node_to_remove = deg_list.front();
+        int node_to_remove = degrees[min_degree].front();
         // Update deleted nodes, number of edges and densities, all O(1)
         deleted_nodes[step]=node_to_remove;
         number_of_edges-=min_degree;
@@ -244,7 +245,7 @@ pair<float,int_list> two_approx(graph_t G){
         degrees[min_degree].pop_front();
         
         // Now we update degrees of neighbours of the node removed
-        int_list adj_list = adj_vec[node_to_remove];
+        const int_list& adj_list = adj_vec[node_to_remove];
         // Loop through the neighbours of the node to remove
         // This takes O(degree(node_removed))
         for (const auto & node : adj_list){
@@ -275,9 +276,9 @@ pair<float,int_list> two_approx(graph_t G){
         }
         // If it's not min_degree-1, it's >= min_degree
         else {
-            int_list l = degrees[min_degree];
-            while (l.empty() && ++min_degree < verticies_count){
-                l = degrees[min_degree];
+            int_list* l = &degrees[min_degree];
+            while (l->empty() && ++min_degree < verticies_count){
+                l = &degrees[min_degree];
             }
         }
     }

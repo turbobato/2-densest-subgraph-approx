@@ -51,15 +51,15 @@ with open("./benchmarks/benchmarks_edges+verticies.csv") as csvfile :
 
 x_space = np.linspace(0,max(sizeval))
 
-
 # Linear regression
 A = np.vstack([sizeval, np.ones(len(sizeval))]).T
 
 m, c = np.linalg.lstsq(A, timeval, rcond=None)[0]
-
+square_vals = square(x_space,timeval[-1],sizeval[-1])
 
 plt.scatter(sizeval,timeval,label='Benchmark points')
 plt.plot(x_space,m*x_space+c,label='Comparison with f(x)=x, normalized')
+plt.plot(x_space,square_vals,label='Comparison with f(x)=x^2, normalized')
 plt.xlabel("Number of edges + number of verticies")
 plt.ylabel("Time, in seconds")
 plt.title("Time of execution as a function of the number of verticies\n plus the number of edges")
@@ -78,8 +78,13 @@ with open("./benchmarks/benchmarks_verticies.csv") as csvfile :
         sizeval.append(int(row['size']))
         timeval.append(float(row['time']))
 
+tab = list(zip(sizeval,timeval))
+tab.sort(key = lambda x : x[0])
+sizeval = [x for x,y in tab]
+timeval = [y for x,y in tab]
+
 x_space = np.linspace(0,max(sizeval))
-square_vals = square(x_space,max(timeval),max(sizeval))
+square_vals = square(x_space,timeval[-1],sizeval[-1])
 
 plt.scatter(sizeval,timeval,label='Benchmark points')
 plt.plot(x_space,square_vals,label='Comparison with f(x)=x^2, normalized')
