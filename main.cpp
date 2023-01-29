@@ -185,13 +185,13 @@ list<graph_t> parse_files(list<string> filepaths){
 
 // Algorithm to compute two approx
 pair<float,int_list> two_approx(const graph_t& G){
-    // Get references to input variables for practicality
+    // Get references to input variables for convenience
     const int& verticies_count = G.verticies_count;
     const vector<int_list>& adj_vec = G.adj_vec;
 
     // Create a vector of lists where degrees[i] is the list of nodes with degree i
-    // We aswell want to keep a vector of iterators to the nodes in the (doubly) linked lists,
-    // to ensure O(1) deletions
+    // We aswell want to keep a vector of iterators representing the positions of
+    // the nodes in the (doubly) linked lists to ensure O(1) deletions
     // We also want to keep track of the current degrees of each node
     vector<int_list> degrees = vector<int_list>(verticies_count);
     vector<int_list::iterator> nodes_iterators = vector<int_list::iterator>(verticies_count);
