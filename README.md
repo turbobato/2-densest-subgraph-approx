@@ -1,4 +1,4 @@
-graphs used : http://snap.stanford.edu/data/gemsec-Facebook.html and http://snap.stanford.edu/data/gemsec-Deezer.html
+graphs used : http://snap.stanford.edu/data/gemsec-Facebook.html and http://snap.stanford.edu/data/gemsec-Deezer.html, http://snap.stanford.edu/data/twitch_gamers.html and http://snap.stanford.edu/data/feather-deezer-social.html
 
 plots : 
 
@@ -8,4 +8,3 @@ plots :
 
 ![Plot of time=f(number of verticies)](/benchmarks_plots/verticies_graph.png "Plot of time=f(number of verticies)")
 
-idée : graphes peu denses dégradent la perf car graphes denses : diminuent de bcp le nb de sommets à mettre à jour a chaque itération
